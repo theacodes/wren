@@ -844,7 +844,7 @@ static void readUnicodeEscape(Parser* parser, ByteBuffer* string, int length)
   int numBytes = wrenUtf8EncodeNumBytes(value);
   if (numBytes != 0)
   {
-    wrenByteBufferFill(parser->vm, string, 0, numBytes);
+    wrenByteBufferFill(parser->vm, string, 0, numBytes, false);
     wrenUtf8Encode(value, string->data + string->count - numBytes);
   }
 }

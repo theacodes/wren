@@ -13,17 +13,17 @@ typedef struct sObjString ObjString;
 // We need buffers of a few different types. To avoid lots of casting between
 // void* and back, we'll use the preprocessor as a poor man's generics and let
 // it generate a few type-specific ones.
-#define DECLARE_BUFFER(name, type)                                             \
+#define DECLARE_BUFFER(name, type, size_type)                                  \
     typedef struct                                                             \
     {                                                                          \
       type* data;                                                              \
-      int count;                                                               \
-      int capacity;                                                            \
+      size_type count;                                                         \
+      size_type capacity;                                                      \
     } name##Buffer;                                                            \
     void wren##name##BufferInit(name##Buffer* buffer);                         \
     void wren##name##BufferClear(WrenVM* vm, name##Buffer* buffer);            \
     void wren##name##BufferFill(WrenVM* vm, name##Buffer* buffer, type data,   \
-                                int count);                                    \
+                                int count, bool power_of_two);                 \
     void wren##name##BufferWrite(WrenVM* vm, name##Buffer* buffer, type data)
 
 // This should be used once for each type instantiation, somewhere in a .c file.
@@ -42,11 +42,12 @@ typedef struct sObjString ObjString;
     }                                                                          \
                                                                                \
     void wren##name##BufferFill(WrenVM* vm, name##Buffer* buffer, type data,   \
-                                int count)                                     \
+                                int count, bool power_of_two)                  \
     {                                                                          \
       if (buffer->capacity < buffer->count + count)                            \
       {                                                                        \
-        int capacity = wrenPowerOf2Ceil(buffer->count + count);                \
+        int capacity = buffer->count + count;                                  \
+        if(power_of_two) { capacity = wrenPowerOf2Ceil(capacity); }            \
         buffer->data = (type*)wrenReallocate(vm, buffer->data,                 \
             buffer->capacity * sizeof(type), capacity * sizeof(type));         \
         buffer->capacity = capacity;                                           \
@@ -60,12 +61,12 @@ typedef struct sObjString ObjString;
                                                                                \
     void wren##name##BufferWrite(WrenVM* vm, name##Buffer* buffer, type data)  \
     {                                                                          \
-      wren##name##BufferFill(vm, buffer, data, 1);                             \
+      wren##name##BufferFill(vm, buffer, data, 1, true);                       \
     }
 
-DECLARE_BUFFER(Byte, uint8_t);
-DECLARE_BUFFER(Int, int);
-DECLARE_BUFFER(String, ObjString*);
+DECLARE_BUFFER(Byte, uint8_t, uint32_t);
+DECLARE_BUFFER(Int, int, uint32_t);
+DECLARE_BUFFER(String, ObjString*, uint32_t);
 
 // TODO: Change this to use a map.
 typedef StringBuffer SymbolTable;

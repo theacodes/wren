@@ -1400,7 +1400,7 @@ WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature)
   wrenByteBufferWrite(vm, &fn->code, CODE_RETURN);
   wrenByteBufferWrite(vm, &fn->code, CODE_END);
 #if WREN_DISABLE_FN_DEBUG == 0
-  wrenIntBufferFill(vm, &fn->debug->sourceLines, 0, 5);
+  wrenIntBufferFill(vm, &fn->debug->sourceLines, 0, 5, false);
 #endif
   wrenFunctionBindName(vm, fn, signature, signatureLength);
 

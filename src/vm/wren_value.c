@@ -124,7 +124,8 @@ void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method)
     Method noMethod;
     noMethod.type = METHOD_NONE;
     wrenMethodBufferFill(vm, &classObj->methods, noMethod,
-                         symbol - classObj->methods.count + 1);
+                         symbol - classObj->methods.count + 1,
+                         false);
   }
 
   classObj->methods.data[symbol] = method;
