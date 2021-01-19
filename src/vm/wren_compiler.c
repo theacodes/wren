@@ -2765,7 +2765,6 @@ static int getByteCountForArguments(const uint8_t* bytecode,
     case CODE_STORE_FIELD_THIS:
     case CODE_LOAD_FIELD:
     case CODE_STORE_FIELD:
-    case CODE_CLASS:
       return 1;
 
     case CODE_CONSTANT:
@@ -2798,6 +2797,9 @@ static int getByteCountForArguments(const uint8_t* bytecode,
     case CODE_IMPORT_MODULE:
     case CODE_IMPORT_VARIABLE:
       return 2;
+
+    case CODE_CLASS:
+      return 3;
 
     case CODE_SUPER_0:
     case CODE_SUPER_1:
@@ -3312,16 +3314,21 @@ static void classDefinition(Compiler* compiler, bool isForeign)
     loadCoreVariable(compiler, "Object");
   }
 
-  // Store a placeholder for the number of fields argument. We don't know the
-  // count until we've compiled all the methods to see which fields are used.
-  int numFieldsInstruction = -1;
+  // For non-foreign classes, go ahead and emit the CLASS opcode. It takes
+  // three arguments: the number of fields, the number of methods, and the
+  // number of static methods. We don't know those counts until after we've
+  // compiled the class body.
+  int classInstructionArgsIdx = -1;
   if (isForeign)
   {
     emitOp(compiler, CODE_FOREIGN_CLASS);
   }
   else
   {
-    numFieldsInstruction = emitByteArg(compiler, CODE_CLASS, 255);
+    emitOp(compiler, CODE_CLASS);
+    classInstructionArgsIdx = emitByte(compiler, 255);
+    emitByte(compiler, 255);
+    emitByte(compiler, 255);
   }
 
   // Store it in its name.
@@ -3361,11 +3368,14 @@ static void classDefinition(Compiler* compiler, bool isForeign)
     consumeLine(compiler, "Expect newline after definition in class.");
   }
 
-  // Update the class with the number of fields.
+  // Now that the whole class definition has been compiled, we can update
+  // the class with the number of fields, methods, and static methods.
   if (!isForeign)
   {
-    compiler->fn->code.data[numFieldsInstruction] =
-        (uint8_t)classInfo.fields.count;
+    compiler->fn->code.data[classInstructionArgsIdx] = (uint8_t)classInfo.fields.count;
+    compiler->fn->code.data[classInstructionArgsIdx + 1] = (uint8_t)classInfo.methods.count;
+    // Include one extra static method slot for the constructor.
+    compiler->fn->code.data[classInstructionArgsIdx + 2] = (uint8_t)classInfo.staticMethods.count + 1;
   }
 
   // Clear symbol tables for tracking field and method names.

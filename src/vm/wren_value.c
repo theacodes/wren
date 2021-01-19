@@ -43,7 +43,7 @@ static void initObj(WrenVM* vm, Obj* obj, ObjType type, ObjClass* classObj)
   vm->first = obj;
 }
 
-ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name)
+ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, int numMethods, ObjString* name)
 {
   ObjClass* classObj = ALLOCATE(vm, ObjClass);
   initObj(vm, &classObj->obj, OBJ_CLASS, NULL);
@@ -83,13 +83,13 @@ void wrenBindSuperclass(WrenVM* vm, ObjClass* subclass, ObjClass* superclass)
 }
 
 ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
-                       ObjString* name)
+                       int numMethods, int numStaticMethods, ObjString* name)
 {
   // Create the metaclass.
   Value metaclassName = wrenStringFormat(vm, "@ metaclass", OBJ_VAL(name));
   wrenPushRoot(vm, AS_OBJ(metaclassName));
 
-  ObjClass* metaclass = wrenNewSingleClass(vm, 0, AS_STRING(metaclassName));
+  ObjClass* metaclass = wrenNewSingleClass(vm, 0, numStaticMethods, AS_STRING(metaclassName));
   metaclass->obj.classObj = vm->classClass;
 
   wrenPopRoot(vm);
@@ -101,7 +101,7 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
   // hierarchy.
   wrenBindSuperclass(vm, metaclass, vm->classClass);
 
-  ObjClass* classObj = wrenNewSingleClass(vm, numFields, name);
+  ObjClass* classObj = wrenNewSingleClass(vm, numFields, numMethods, name);
 
   // Make sure the class isn't collected while the inherited methods are being
   // bound.

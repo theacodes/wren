@@ -605,7 +605,7 @@ static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
 // stack will contain the new class.
 //
 // Aborts the current fiber if an error occurs.
-static void createClass(WrenVM* vm, int numFields, ObjModule* module)
+static void createClass(WrenVM* vm, int numFields, int numMethods, int numStaticMethods, ObjModule* module)
 {
   // Pull the name and superclass off the stack.
   Value name = vm->fiber->stackTop[-2];
@@ -618,8 +618,8 @@ static void createClass(WrenVM* vm, int numFields, ObjModule* module)
   vm->fiber->error = validateSuperclass(vm, name, superclass, numFields);
   if (wrenHasError(vm->fiber)) return;
 
-  ObjClass* classObj = wrenNewClass(vm, AS_CLASS(superclass), numFields,
-                                    AS_STRING(name));
+  ObjClass* classObj = wrenNewClass(vm, AS_CLASS(superclass), numFields, numMethods,
+                                    numStaticMethods, AS_STRING(name));
   vm->fiber->stackTop[-1] = OBJ_VAL(classObj);
 
   if (numFields == -1) bindForeignClass(vm, classObj, module);
@@ -1267,14 +1267,17 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
     CASE_CODE(CLASS):
     {
-      createClass(vm, READ_BYTE(), NULL);
+      uint8_t numFields = READ_BYTE();
+      uint8_t numMethods = READ_BYTE();
+      uint8_t numStaticMethods = READ_BYTE();
+      createClass(vm, numFields, numMethods, numStaticMethods, NULL);
       if (wrenHasError(fiber)) RUNTIME_ERROR();
       DISPATCH();
     }
 
     CASE_CODE(FOREIGN_CLASS):
     {
-      createClass(vm, -1, fn->module);
+      createClass(vm, -1, -1, -1, fn->module);
       if (wrenHasError(fiber)) RUNTIME_ERROR();
       DISPATCH();
     }

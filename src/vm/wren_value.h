@@ -617,7 +617,7 @@ typedef struct
 // Creates a new "raw" class. It has no metaclass or superclass whatsoever.
 // This is only used for bootstrapping the initial Object and Class classes,
 // which are a little special.
-ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name);
+ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, int numMethods, ObjString* name);
 
 // Makes [superclass] the superclass of [subclass], and causes subclass to
 // inherit its methods. This should be called before any methods are defined
@@ -626,7 +626,7 @@ void wrenBindSuperclass(WrenVM* vm, ObjClass* subclass, ObjClass* superclass);
 
 // Creates a new class object as well as its associated metaclass.
 ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
-                       ObjString* name);
+                       int numMethods, int numStaticMethods, ObjString* name);
 
 void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method);
 
