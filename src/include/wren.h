@@ -375,7 +375,7 @@ void wrenReleaseHandle(WrenVM* vm, WrenHandle* handle);
 // return, you get a very fast FFI.
 
 // Returns the number of slots available to the current foreign method.
-int wrenGetSlotCount(WrenVM* vm);
+uint16_t wrenGetSlotCount(WrenVM* vm);
 
 // Ensures that the foreign method stack has at least [numSlots] available for
 // use, growing the stack if needed.
@@ -383,15 +383,15 @@ int wrenGetSlotCount(WrenVM* vm);
 // Does not shrink the stack if it has more than enough slots.
 //
 // It is an error to call this from a finalizer.
-void wrenEnsureSlots(WrenVM* vm, int numSlots);
+void wrenEnsureSlots(WrenVM* vm, uint16_t numSlots);
 
 // Gets the type of the object in [slot].
-WrenType wrenGetSlotType(WrenVM* vm, int slot);
+WrenType wrenGetSlotType(WrenVM* vm, uint16_t slot);
 
 // Reads a boolean value from [slot].
 //
 // It is an error to call this if the slot does not contain a boolean value.
-bool wrenGetSlotBool(WrenVM* vm, int slot);
+bool wrenGetSlotBool(WrenVM* vm, uint16_t slot);
 
 // Reads a byte array from [slot].
 //
@@ -403,19 +403,19 @@ bool wrenGetSlotBool(WrenVM* vm, int slot);
 // number of bytes in the array.
 //
 // It is an error to call this if the slot does not contain a string.
-const char* wrenGetSlotBytes(WrenVM* vm, int slot, int* length);
+const char* wrenGetSlotBytes(WrenVM* vm, uint16_t slot, int* length);
 
 // Reads a number from [slot].
 //
 // It is an error to call this if the slot does not contain a number.
-double wrenGetSlotDouble(WrenVM* vm, int slot);
+double wrenGetSlotDouble(WrenVM* vm, uint16_t slot);
 
 // Reads a foreign object from [slot] and returns a pointer to the foreign data
 // stored with it.
 //
 // It is an error to call this if the slot does not contain an instance of a
 // foreign class.
-void* wrenGetSlotForeign(WrenVM* vm, int slot);
+void* wrenGetSlotForeign(WrenVM* vm, uint16_t slot);
 
 // Reads a string from [slot].
 //
@@ -424,25 +424,25 @@ void* wrenGetSlotForeign(WrenVM* vm, int slot);
 // function returns, since the garbage collector may reclaim it.
 //
 // It is an error to call this if the slot does not contain a string.
-const char* wrenGetSlotString(WrenVM* vm, int slot);
+const char* wrenGetSlotString(WrenVM* vm, uint16_t slot);
 
 // Creates a handle for the value stored in [slot].
 //
 // This will prevent the object that is referred to from being garbage collected
 // until the handle is released by calling [wrenReleaseHandle()].
-WrenHandle* wrenGetSlotHandle(WrenVM* vm, int slot);
+WrenHandle* wrenGetSlotHandle(WrenVM* vm, uint16_t slot);
 
 // Stores the boolean [value] in [slot].
-void wrenSetSlotBool(WrenVM* vm, int slot, bool value);
+void wrenSetSlotBool(WrenVM* vm, uint16_t slot, bool value);
 
 // Stores the array [length] of [bytes] in [slot].
 //
 // The bytes are copied to a new string within Wren's heap, so you can free
 // memory used by them after this is called.
-void wrenSetSlotBytes(WrenVM* vm, int slot, const char* bytes, size_t length);
+void wrenSetSlotBytes(WrenVM* vm, uint16_t slot, const char* bytes, size_t length);
 
 // Stores the numeric [value] in [slot].
-void wrenSetSlotDouble(WrenVM* vm, int slot, double value);
+void wrenSetSlotDouble(WrenVM* vm, uint16_t slot, double value);
 
 // Creates a new instance of the foreign class stored in [classSlot] with [size]
 // bytes of raw storage and places the resulting object in [slot].
@@ -453,16 +453,16 @@ void wrenSetSlotDouble(WrenVM* vm, int slot, double value);
 // and then the constructor will be invoked when the allocator returns.
 //
 // Returns a pointer to the foreign object's data.
-void* wrenSetSlotNewForeign(WrenVM* vm, int slot, int classSlot, size_t size);
+void* wrenSetSlotNewForeign(WrenVM* vm, uint16_t slot, uint16_t classSlot, size_t size);
 
 // Stores a new empty list in [slot].
-void wrenSetSlotNewList(WrenVM* vm, int slot);
+void wrenSetSlotNewList(WrenVM* vm, uint16_t slot);
 
 // Stores a new empty map in [slot].
-void wrenSetSlotNewMap(WrenVM* vm, int slot);
+void wrenSetSlotNewMap(WrenVM* vm, uint16_t slot);
 
 // Stores null in [slot].
-void wrenSetSlotNull(WrenVM* vm, int slot);
+void wrenSetSlotNull(WrenVM* vm, uint16_t slot);
 
 // Stores the string [text] in [slot].
 //
@@ -470,55 +470,55 @@ void wrenSetSlotNull(WrenVM* vm, int slot);
 // memory used by it after this is called. The length is calculated using
 // [strlen()]. If the string may contain any null bytes in the middle, then you
 // should use [wrenSetSlotBytes()] instead.
-void wrenSetSlotString(WrenVM* vm, int slot, const char* text);
+void wrenSetSlotString(WrenVM* vm, uint16_t slot, const char* text);
 
 // Stores the value captured in [handle] in [slot].
 //
 // This does not release the handle for the value.
-void wrenSetSlotHandle(WrenVM* vm, int slot, WrenHandle* handle);
+void wrenSetSlotHandle(WrenVM* vm, uint16_t slot, WrenHandle* handle);
 
 // Returns the number of elements in the list stored in [slot].
-int wrenGetListCount(WrenVM* vm, int slot);
+int wrenGetListCount(WrenVM* vm, uint16_t slot);
 
 // Reads element [index] from the list in [listSlot] and stores it in
 // [elementSlot].
-void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
+void wrenGetListElement(WrenVM* vm, uint16_t listSlot, int index, uint16_t elementSlot);
 
 // Sets the value stored at [index] in the list at [listSlot], 
 // to the value from [elementSlot]. 
-void wrenSetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
+void wrenSetListElement(WrenVM* vm, uint16_t listSlot, int index, uint16_t elementSlot);
 
 // Takes the value stored at [elementSlot] and inserts it into the list stored
 // at [listSlot] at [index].
 //
 // As in Wren, negative indexes can be used to insert from the end. To append
 // an element, use `-1` for the index.
-void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot);
+void wrenInsertInList(WrenVM* vm, uint16_t listSlot, int index, uint16_t elementSlot);
 
 // Returns the number of entries in the map stored in [slot].
-int wrenGetMapCount(WrenVM* vm, int slot);
+int wrenGetMapCount(WrenVM* vm, uint16_t slot);
 
 // Returns true if the key in [keySlot] is found in the map placed in [mapSlot].
-bool wrenGetMapContainsKey(WrenVM* vm, int mapSlot, int keySlot);
+bool wrenGetMapContainsKey(WrenVM* vm, uint16_t mapSlot, uint16_t keySlot);
 
 // Retrieves a value with the key in [keySlot] from the map in [mapSlot] and
 // stores it in [valueSlot].
-void wrenGetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot);
+void wrenGetMapValue(WrenVM* vm, uint16_t mapSlot, uint16_t keySlot, uint16_t valueSlot);
 
 // Takes the value stored at [valueSlot] and inserts it into the map stored
 // at [mapSlot] with key [keySlot].
-void wrenSetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot);
+void wrenSetMapValue(WrenVM* vm, uint16_t mapSlot, uint16_t keySlot, uint16_t valueSlot);
 
 // Removes a value from the map in [mapSlot], with the key from [keySlot],
 // and place it in [removedValueSlot]. If not found, [removedValueSlot] is
 // set to null, the same behaviour as the Wren Map API.
-void wrenRemoveMapValue(WrenVM* vm, int mapSlot, int keySlot,
-                        int removedValueSlot);
+void wrenRemoveMapValue(WrenVM* vm, uint16_t mapSlot, uint16_t keySlot,
+                        uint16_t removedValueSlot);
 
 // Looks up the top level variable with [name] in resolved [module] and stores
 // it in [slot].
 void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
-                     int slot);
+                     uint16_t slot);
 
 // Looks up the top level variable with [name] in resolved [module], 
 // returns false if not found. The module must be imported at the time, 
@@ -530,7 +530,7 @@ bool wrenHasModule(WrenVM* vm, const char* module);
 
 // Sets the current fiber to be aborted, and uses the value in [slot] as the
 // runtime error object.
-void wrenAbortFiber(WrenVM* vm, int slot);
+void wrenAbortFiber(WrenVM* vm, uint16_t slot);
 
 // Returns the user data associated with the WrenVM.
 void* wrenGetUserData(WrenVM* vm);

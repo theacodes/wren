@@ -21,12 +21,12 @@
 //
 // Note that this limitation is also explicit in the bytecode. Since
 // `CODE_LOAD_LOCAL` and `CODE_STORE_LOCAL` use a single argument byte to
-// identify the local, only 256 can be in scope at one time.
-#define MAX_LOCALS 256
+// identify the local, only 255 can be in scope at one time.
+#define MAX_LOCALS 255
 
 // The maximum number of upvalues (i.e. variables from enclosing functions)
 // that a function can close over.
-#define MAX_UPVALUES 256
+#define MAX_UPVALUES 255
 
 // The maximum number of distinct constants that a function can contain. This
 // value is explicit in the bytecode since `CODE_CONSTANT` only takes a single
@@ -323,7 +323,7 @@ struct sCompiler
   Local locals[MAX_LOCALS];
 
   // The number of local variables currently in scope.
-  int numLocals;
+  uint16_t numLocals;
 
   // The upvalues that this function has captured from outer scopes. The count
   // of them is stored in [numUpvalues].
@@ -344,7 +344,7 @@ struct sCompiler
   // This value here doesn't include parameters to the function. Since those
   // are already pushed onto the stack by the caller and tracked there, we
   // don't need to double count them here.
-  int numSlots;
+  uint16_t numSlots;
 
   // The current innermost loop being compiled, or NULL if not in a loop.
   Loop* loop;
@@ -1517,8 +1517,11 @@ static Variable resolveName(Compiler* compiler, const char* name, int length)
   return variable;
 }
 
-static void loadLocal(Compiler* compiler, int slot)
+static void loadLocal(Compiler* compiler, uint16_t slot)
 {
+  if (slot >= 0xFF) {
+    error(compiler, "Tried to load a local from outside of the maximum number of slots (255).");
+  }
   if (slot <= 8)
   {
     emitOp(compiler, (Code)(CODE_LOAD_LOCAL_0 + slot));

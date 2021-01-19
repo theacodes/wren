@@ -254,6 +254,5 @@
   var a252 = a251
   var a253 = a252
   var a254 = a253
-  var a255 = a254
-  var a256 = a255 // expect error
+  var a255 = a254 // expect error
 }

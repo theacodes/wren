@@ -258,8 +258,7 @@
     var a252 = a251
     var a253 = a252
     var a254 = a253
-    var a255 = a254
-    System.print(a255) // expect: value a
+    System.print(a254) // expect: value a
   }
 
   {
@@ -518,7 +517,8 @@
     var b252 = b251
     var b253 = b252
     var b254 = b253
-    var b255 = b254
-    System.print(b255) // expect: value b
+    // The load local bytecode has an 8-bit argument, and one slot
+    // is alredy consumed.
+    System.print(b254) // expect: value b
   }
 }

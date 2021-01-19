@@ -1,4 +1,9 @@
 #include <string.h>
+#include <assert.h>
+#ifndef NDEBUG
+#include <execinfo.h>
+#include <stdio.h>
+#endif
 
 #include "wren_utils.h"
 #include "wren_vm.h"

@@ -146,7 +146,7 @@ typedef struct
 
 #endif
 
-DECLARE_BUFFER(Value, Value, uint32_t);
+DECLARE_BUFFER(Value, Value, int);
 
 // A heap-allocated string object.
 struct sObjString
@@ -255,7 +255,7 @@ typedef struct
   ObjModule* module;
 
   // The maximum number of stack slots this function may use.
-  uint8_t maxSlots;
+  uint16_t maxSlots;
   
   // The number of upvalues this function closes over.
   uint8_t numUpvalues;
@@ -339,10 +339,10 @@ typedef struct sObjFiber
   CallFrame* frames;
   
   // The number of frames currently in use in [frames].
-  uint8_t numFrames;
+  uint16_t numFrames;
   
   // The number of [frames] allocated.
-  uint8_t frameCapacity;
+  uint16_t frameCapacity;
   
   // Pointer to the first node in the linked list of open upvalues that are
   // pointing to values still on the stack. The head of the list will be the
@@ -671,7 +671,7 @@ ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size);
 
 // Creates a new empty function. Before being used, it must have code,
 // constants, etc. added to it.
-ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module, uint8_t maxSlots);
+ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module, uint16_t maxSlots);
 
 void wrenFunctionBindName(WrenVM* vm, ObjFn* fn, const char* name, int length);
 

@@ -26,6 +26,7 @@ typedef struct sObjString ObjString;
                                 int count, bool power_of_two);                 \
     void wren##name##BufferWrite(WrenVM* vm, name##Buffer* buffer, type data)
 
+
 // This should be used once for each type instantiation, somewhere in a .c file.
 #define DEFINE_BUFFER(name, type)                                              \
     void wren##name##BufferInit(name##Buffer* buffer)                          \
@@ -64,9 +65,9 @@ typedef struct sObjString ObjString;
       wren##name##BufferFill(vm, buffer, data, 1, true);                       \
     }
 
-DECLARE_BUFFER(Byte, uint8_t, uint32_t);
-DECLARE_BUFFER(Int, int, uint32_t);
-DECLARE_BUFFER(String, ObjString*, uint32_t);
+DECLARE_BUFFER(Byte, uint8_t, size_t);
+DECLARE_BUFFER(Int, int, size_t);
+DECLARE_BUFFER(String, ObjString*, size_t);
 
 // TODO: Change this to use a map.
 typedef StringBuffer SymbolTable;
