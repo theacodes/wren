@@ -154,10 +154,10 @@ struct sObjString
   Obj obj;
 
   // Number of bytes in the string, not including the null terminator.
-  uint32_t length;
+  wren_string_length_t length;
 
   // The hash value of the string's contents.
-  uint32_t hash;
+  wren_string_hash_t hash;
 
   // Inline array of the string's bytes followed by a null terminator.
   char value[FLEXIBLE_ARRAY];

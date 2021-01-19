@@ -120,6 +120,14 @@
 // field index*.
 #define MAX_FIELDS 255
 
+// The size type for a string. This also effectively limits the maximum length
+// that a string can be.
+typedef uint16_t wren_string_length_t;
+
+// The type for a string's hash. Making this smaller can cause more hash
+// collisions.
+typedef uint16_t wren_string_hash_t;
+
 // Use the VM's allocator to allocate an object of [type].
 #define ALLOCATE(vm, type)                                                     \
     ((type*)wrenReallocate(vm, NULL, 0, sizeof(type)))
