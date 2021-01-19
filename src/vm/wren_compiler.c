@@ -1574,6 +1574,12 @@ static ObjFn* endCompiler(Compiler* compiler,
     wrenDumpCode(compiler->parser->vm, compiler->fn);
   #endif
 
+  // Release the constants map, it's no longer needed.
+  if(compiler->constants != NULL)
+  {
+    wrenMapClear(compiler->parser->vm, compiler->constants);
+  }
+
   return compiler->fn;
 }
 
