@@ -240,7 +240,7 @@ ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size)
   return object;
 }
 
-ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module, int maxSlots)
+ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module, uint8_t maxSlots)
 {
   ObjFn* fn = ALLOCATE(vm, ObjFn);
   initObj(vm, &fn->obj, OBJ_FN, vm->fnClass);

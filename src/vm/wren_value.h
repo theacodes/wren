@@ -255,15 +255,15 @@ typedef struct
   ObjModule* module;
 
   // The maximum number of stack slots this function may use.
-  int maxSlots;
+  uint8_t maxSlots;
   
   // The number of upvalues this function closes over.
-  int numUpvalues;
+  uint8_t numUpvalues;
   
   // The number of parameters this function expects. Used to ensure that .call
   // handles a mismatch between number of parameters and arguments. This will
   // only be set for fns, and not ObjFns that represent methods or scripts.
-  int arity;
+  uint8_t arity;
   
   // Function debug information, such as the function name and mappings
   // to source lines.
@@ -669,7 +669,7 @@ ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size);
 
 // Creates a new empty function. Before being used, it must have code,
 // constants, etc. added to it.
-ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module, int maxSlots);
+ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module, uint8_t maxSlots);
 
 void wrenFunctionBindName(WrenVM* vm, ObjFn* fn, const char* name, int length);
 
