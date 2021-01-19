@@ -52,7 +52,15 @@ ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, int numMethods, ObjStrin
   classObj->name = name;
 
   wrenPushRoot(vm, (Obj*)classObj);
+
   wrenMethodBufferInit(&classObj->methods);
+
+#if WREN_ENABLE_ALT_METHOD_STORAGE == 1
+  // Go ahead and allocate all of the memory needed to storage all of this
+  // class's methods.
+  wrenMethodBufferFill(vm, &classObj->methods, (Method){.symbol = -1}, numMethods, false);
+#endif
+
   wrenPopRoot(vm);
 
   return classObj;
@@ -75,11 +83,15 @@ void wrenBindSuperclass(WrenVM* vm, ObjClass* subclass, ObjClass* superclass)
            "A foreign class cannot inherit from a class with fields.");
   }
 
+  // Alt storage uses wrenFindMethod instead of copying the superclass
+  // methods to the subclass.
+#if WREN_ENABLE_ALT_METHOD_STORAGE == 0
   // Inherit methods from its superclass.
   for (int i = 0; i < superclass->methods.count; i++)
   {
     wrenBindMethod(vm, subclass, i, superclass->methods.data[i]);
   }
+#endif
 }
 
 ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
@@ -118,6 +130,26 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
 
 void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method)
 {
+#if WREN_ENABLE_ALT_METHOD_STORAGE == 1
+  // Place the method in the first open slot.
+  bool placed = false;
+  for(size_t i = 0; i < classObj->methods.count; i++) {
+    if(classObj->methods.data[i].symbol == -1 || classObj->methods.data[i].symbol == symbol) {
+      method.symbol = symbol;
+      classObj->methods.data[i] = method;
+      placed = true;
+      break;
+    }
+  }
+  // TODO: Do something more sophisticated here.
+  if(!placed) {
+    printf("wrenBindMethod: %s.%s not placed, only %d slots available.\n", classObj->name->value, vm->methodNames.data[symbol]->value, classObj->methods.count);
+  }
+#else
+  // Wren stores the methods in a sort-of "spare map" between symbol -> Method.
+  // Since symbols are global IDs, the method buffer will be larger and larger
+  // the more symbols are declared.
+
   // Make sure the buffer is big enough to contain the symbol's index.
   if (symbol >= classObj->methods.count)
   {
@@ -129,6 +161,29 @@ void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method)
   }
 
   classObj->methods.data[symbol] = method;
+#endif
+}
+
+void wrenAddMethodSlots(WrenVM* vm, ObjClass* classObj, uint16_t numMethods) {
+  // TODO: Use method type = METHOD_NONE instead of a negative symbol.
+  wrenMethodBufferFill(vm, &classObj->methods, (Method){.symbol = -1}, numMethods, false);
+}
+
+Method* wrenFindMethod(WrenVM* vm, ObjClass* classObj, int symbol) {
+  for(size_t i = 0; i < classObj->methods.count; i++) {
+    if(classObj->methods.data[i].symbol == symbol) {
+      return &classObj->methods.data[i];
+    }
+  }
+  // We didn't find the method on the class, so try looking it up on
+  // in the superclasses.
+  if(classObj->superclass != NULL) {
+    Method* result = wrenFindMethod(vm, classObj->superclass, symbol);
+    if(result != NULL) {
+      return result;
+    }
+  }
+  return NULL;
 }
 
 ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)

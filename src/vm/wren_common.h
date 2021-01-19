@@ -55,6 +55,17 @@
   #define WREN_OPT_RANDOM 1
 #endif
 
+// This flag enables a memory-efficient but slower method storage strategy.
+// By default, Wren stores class methods in a sort-of "spare map" of
+// symbol -> Method. This means that the more symbols there are in the
+// global symbol table, the larger the class method buffer will be -
+// regardless of how many methods the class actually implements.
+// With this enabled, methods are stored as a normal array and must be
+// looked-up by iterating through the methods. It also prevents Wren
+// from copying superclass methods into the class method table, so
+// superclass methods have to be looked up through the superclass chain.
+#define WREN_ENABLE_ALT_METHOD_STORAGE 1
+
 // These flags are useful for debugging and hacking on Wren itself. They are not
 // intended to be used for production code. They default to off.
 

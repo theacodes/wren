@@ -658,10 +658,16 @@ void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign)
 
   // If the class doesn't have a finalizer, bail out.
   ObjClass* classObj = foreign->obj.classObj;
+
+#if WREN_ENABLE_ALT_METHOD_STORAGE == 0
   if (symbol >= classObj->methods.count) return;
 
   Method* method = &classObj->methods.data[symbol];
   if (method->type == METHOD_NONE) return;
+#else
+  Method* method = wrenFindMethod(vm, classObj, symbol);
+  if (method == NULL) return;
+#endif
 
   ASSERT(method->type == METHOD_FOREIGN, "Finalizer should be foreign.");
 
@@ -1005,8 +1011,12 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
     completeCall:
       // If the class's method table doesn't include the symbol, bail.
+#if WREN_ENABLE_ALT_METHOD_STORAGE == 0
       if (symbol >= classObj->methods.count ||
           (method = &classObj->methods.data[symbol])->type == METHOD_NONE)
+#else
+      if ((method = wrenFindMethod(vm, classObj, symbol)) == NULL)
+#endif
       {
         methodNotFound(vm, classObj, symbol);
         RUNTIME_ERROR();

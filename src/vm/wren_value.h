@@ -382,6 +382,7 @@ typedef enum
 typedef struct
 {
   MethodType type;
+  int symbol;
 
   // The method function itself. The [type] determines which field of the union
   // is used.
@@ -637,6 +638,8 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
                        int numMethods, int numStaticMethods, ObjString* name);
 
 void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method);
+void wrenAddMethodSlots(WrenVM* vm, ObjClass* classObj, uint16_t numMethods);
+Method* wrenFindMethod(WrenVM* vm, ObjClass* classObj, int symbol);
 
 // Creates a new closure object that invokes [fn]. Allocates room for its
 // upvalues, but assumes outside code will populate it.

@@ -290,12 +290,13 @@ def read_baseline():
               benchmark[2] = 0.0
 
 
-def generate_baseline():
+def generate_baseline(benchmarks):
   print("generating baseline")
   baseline_text = ""
   for benchmark in BENCHMARKS:
-    best = run_benchmark_language(benchmark, LANGUAGES[0], {})
-    baseline_text += ("{},{}\n".format(benchmark[0], best))
+    if benchmark[0] in benchmarks:
+      best = run_benchmark_language(benchmark, LANGUAGES[0], {})
+      baseline_text += ("{},{}\n".format(benchmark[0], best))
 
   # Write them to a file.
   baseline_file = os.path.join(BENCHMARK_DIR, "baseline.txt")
@@ -340,7 +341,7 @@ def print_html():
 
 def main():
   parser = argparse.ArgumentParser(description="Run the benchmarks")
-  parser.add_argument("benchmark", nargs='?',
+  parser.add_argument("benchmark", nargs='*',
       default="all",
       help="The benchmark to run")
   parser.add_argument("--generate-baseline",
@@ -359,14 +360,14 @@ def main():
   args = parser.parse_args()
 
   if args.generate_baseline:
-    generate_baseline()
+    generate_baseline(args.benchmark)
     return
 
   read_baseline()
 
   # Run the benchmarks.
   for benchmark in BENCHMARKS:
-    if benchmark[0] == args.benchmark or args.benchmark == "all":
+    if benchmark[0] in args.benchmark or args.benchmark == "all":
       run_benchmark(benchmark, args.language, args.graph)
 
   if args.output_html:

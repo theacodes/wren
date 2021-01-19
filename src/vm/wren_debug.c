@@ -1,4 +1,7 @@
 #include <stdio.h>
+#ifndef NDEBUG
+#include <execinfo.h>
+#endif
 
 #include "wren_debug.h"
 
