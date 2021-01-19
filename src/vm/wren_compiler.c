@@ -1221,10 +1221,10 @@ static int emitByteArg(Compiler* compiler, Code instruction, int arg)
 
 // Emits one bytecode instruction followed by a 16-bit argument, which will be
 // written big endian.
-static void emitShortArg(Compiler* compiler, Code instruction, int arg)
+static int emitShortArg(Compiler* compiler, Code instruction, int arg)
 {
   emitOp(compiler, instruction);
-  emitShort(compiler, arg);
+  return emitShort(compiler, arg);
 }
 
 // Emits [instruction] followed by a placeholder for a jump offset. The
