@@ -24,4 +24,7 @@ void wrenDumpCode(WrenVM* vm, ObjFn* fn);
 // Prints the contents of the current stack for [fiber] to stdout.
 void wrenDumpStack(ObjFiber* fiber);
 
+// Prints the current C backtrace.
+void wrenPrintCBacktrace(size_t depth);
+
 #endif

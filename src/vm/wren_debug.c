@@ -400,3 +400,24 @@ void wrenDumpStack(ObjFiber* fiber)
   }
   printf("\n");
 }
+
+
+void wrenPrintCBacktrace(size_t depth)
+{
+#ifndef NDEBUG
+  void *array[depth];
+  char **strings;
+  int size, i;
+
+  size = backtrace(array, depth);
+  strings = backtrace_symbols(array, size);
+  if (strings != NULL && size > 0)
+  {
+    printf("C Backtrace:\n");
+    for (i = 1; i < size; i++)
+      printf("%s\n", strings[i]);
+  }
+
+  free(strings);
+#endif
+}
