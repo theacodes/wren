@@ -35,10 +35,16 @@ void wrenDebugPrintStackTrace(WrenVM* vm)
     if (fn->module->name == NULL) continue;
     
     // -1 because IP has advanced past the instruction that it just executed.
+#if WREN_DISABLE_FN_DEBUG == 0
     int line = fn->debug->sourceLines.data[frame->ip - fn->code.data - 1];
     vm->config.errorFn(vm, WREN_ERROR_STACK_TRACE,
                        fn->module->name->value, line,
                        fn->debug->name);
+#else
+    vm->config.errorFn(vm, WREN_ERROR_STACK_TRACE,
+                       fn->module->name->value, 0,
+                       "[function names disabled]");
+#endif
   }
 }
 
@@ -105,6 +111,8 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
   uint8_t* bytecode = fn->code.data;
   Code code = (Code)bytecode[i];
 
+
+#if WREN_DISABLE_FN_DEBUG == 0
   int line = fn->debug->sourceLines.data[i];
   if (lastLine == NULL || *lastLine != line)
   {
@@ -112,6 +120,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     if (lastLine != NULL) *lastLine = line;
   }
   else
+#endif
   {
     printf("     ");
   }
@@ -359,9 +368,15 @@ int wrenDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
 
 void wrenDumpCode(WrenVM* vm, ObjFn* fn)
 {
+#if WREN_DISABLE_FN_DEBUG == 0
   printf("%s: %s\n",
          fn->module->name == NULL ? "<core>" : fn->module->name->value,
          fn->debug->name);
+#else
+  printf("%s: %s\n",
+         fn->module->name == NULL ? "<core>" : fn->module->name->value,
+         "[function names disabled]");
+#endif
 
   int i = 0;
   int lastLine = -1;

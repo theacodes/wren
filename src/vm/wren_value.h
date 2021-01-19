@@ -264,7 +264,13 @@ typedef struct
   // handles a mismatch between number of parameters and arguments. This will
   // only be set for fns, and not ObjFns that represent methods or scripts.
   int arity;
+  
+  // Function debug information, such as the function name and mappings
+  // to source lines.
+#if WREN_DISABLE_FN_DEBUG == 0
   FnDebug* debug;
+#endif
+
 } ObjFn;
 
 // An instance of a first-class function and the environment it has closed over.

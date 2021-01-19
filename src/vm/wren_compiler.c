@@ -1183,9 +1183,11 @@ static int emitByte(Compiler* compiler, int byte)
 {
   wrenByteBufferWrite(compiler->parser->vm, &compiler->fn->code, (uint8_t)byte);
 
+#if WREN_DISABLE_FN_DEBUG == 0
   // Assume the instruction is associated with the most recently consumed token.
   wrenIntBufferWrite(compiler->parser->vm, &compiler->fn->debug->sourceLines,
                      compiler->parser->previous.line);
+#endif
 
   return compiler->fn->code.count - 1;
 }

@@ -75,6 +75,13 @@
 // Set this to trace each instruction as it's executed.
 #define WREN_DEBUG_TRACE_INSTRUCTIONS 0
 
+// Enabling this will remove function debug data - including the function name and
+// mapping to source lines. This is intended only for very memory constrained
+// systems.
+#ifndef WREN_DISABLE_FN_DEBUG
+  #define WREN_DISABLE_FN_DEBUG 0
+#endif
+
 // The maximum number of module-level variables that may be defined at one time.
 // This limitation comes from the 16 bits used for the arguments to
 // `CODE_LOAD_MODULE_VAR` and `CODE_STORE_MODULE_VAR`.

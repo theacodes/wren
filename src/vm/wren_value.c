@@ -242,10 +242,6 @@ ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size)
 
 ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module, int maxSlots)
 {
-  FnDebug* debug = ALLOCATE(vm, FnDebug);
-  debug->name = NULL;
-  wrenIntBufferInit(&debug->sourceLines);
-
   ObjFn* fn = ALLOCATE(vm, ObjFn);
   initObj(vm, &fn->obj, OBJ_FN, vm->fnClass);
   
@@ -255,16 +251,24 @@ ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module, int maxSlots)
   fn->maxSlots = maxSlots;
   fn->numUpvalues = 0;
   fn->arity = 0;
+  
+#if WREN_DISABLE_FN_DEBUG == 0
+  FnDebug* debug = ALLOCATE(vm, FnDebug);
+  debug->name = NULL;
+  wrenIntBufferInit(&debug->sourceLines);
   fn->debug = debug;
+#endif
   
   return fn;
 }
 
 void wrenFunctionBindName(WrenVM* vm, ObjFn* fn, const char* name, int length)
 {
+#if WREN_DISABLE_FN_DEBUG == 0
   fn->debug->name = ALLOCATE_ARRAY(vm, char, length + 1);
   memcpy(fn->debug->name, name, length);
   fn->debug->name[length] = '\0';
+#endif
 }
 
 Value wrenNewInstance(WrenVM* vm, ObjClass* classObj)
@@ -1092,7 +1096,9 @@ static void blackenFn(WrenVM* vm, ObjFn* fn)
   vm->bytesAllocated += sizeof(Value) * fn->constants.capacity;
   
   // The debug line number buffer.
+#if WREN_DISABLE_FN_DEBUG == 0
   vm->bytesAllocated += sizeof(int) * fn->code.capacity;
+#endif
   // TODO: What about the function name?
 }
 
@@ -1247,9 +1253,11 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
       ObjFn* fn = (ObjFn*)obj;
       wrenValueBufferClear(vm, &fn->constants);
       wrenByteBufferClear(vm, &fn->code);
+#if WREN_DISABLE_FN_DEBUG == 0
       wrenIntBufferClear(vm, &fn->debug->sourceLines);
       DEALLOCATE(vm, fn->debug->name);
       DEALLOCATE(vm, fn->debug);
+#endif
       break;
     }
 
