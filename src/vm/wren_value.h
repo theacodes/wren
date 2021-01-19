@@ -402,7 +402,9 @@ struct sObjClass
 
   // The number of fields needed for an instance of this class, including all
   // of its superclass fields.
-  int numFields;
+  // TODO: Wren uses negative values here for out-of-band signaling of foreign
+  // classes. Fix that so this can be a uint8_t.
+  int16_t numFields;
 
   // The table of methods that are defined in or inherited by this class.
   // Methods are called by symbol, and the symbol directly maps to an index in
