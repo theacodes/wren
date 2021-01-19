@@ -332,17 +332,17 @@ typedef struct sObjFiber
   Value* stackTop;
   
   // The number of allocated slots in the stack array.
-  int stackCapacity;
+  uint16_t stackCapacity;
   
   // The stack of call frames. This is a dynamic array that grows as needed but
   // never shrinks.
   CallFrame* frames;
   
   // The number of frames currently in use in [frames].
-  int numFrames;
+  uint8_t numFrames;
   
   // The number of [frames] allocated.
-  int frameCapacity;
+  uint8_t frameCapacity;
   
   // Pointer to the first node in the linked list of open upvalues that are
   // pointing to values still on the stack. The head of the list will be the
