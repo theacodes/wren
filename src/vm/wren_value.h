@@ -146,7 +146,7 @@ typedef struct
 
 #endif
 
-DECLARE_BUFFER(Value, Value, int);
+DECLARE_BUFFER(Value, Value, uint32_t);
 
 // A heap-allocated string object.
 struct sObjString
@@ -393,7 +393,7 @@ typedef struct
   } as;
 } Method;
 
-DECLARE_BUFFER(Method, Method, uint32_t);
+DECLARE_BUFFER(Method, Method, uint16_t);
 
 struct sObjClass
 {
