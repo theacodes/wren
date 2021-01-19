@@ -1204,10 +1204,11 @@ static void emitOp(Compiler* compiler, Code instruction)
 }
 
 // Emits one 16-bit argument, which will be written big endian.
-static void emitShort(Compiler* compiler, int arg)
+static int emitShort(Compiler* compiler, int arg)
 {
-  emitByte(compiler, (arg >> 8) & 0xff);
+  int idx = emitByte(compiler, (arg >> 8) & 0xff);
   emitByte(compiler, arg & 0xff);
+  return idx;
 }
 
 // Emits one bytecode instruction followed by a 8-bit argument. Returns the
