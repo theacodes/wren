@@ -9,6 +9,7 @@ from os.path import abspath, basename, dirname, isdir, isfile, join, realpath, r
 import re
 from subprocess import Popen, PIPE
 import sys
+import time
 from threading import Timer
 import platform
 # Runs the tests.
@@ -63,6 +64,7 @@ class Test:
     self.exit_code = 0
     self.input_bytes = None
     self.failures = []
+    self.slow = []
 
 
   def parse(self):
@@ -160,6 +162,7 @@ class Test:
       p.kill()
 
     timer = Timer(5, kill_process, [proc])
+    start_time = time.time()
 
     try:
       timer.start()
@@ -168,6 +171,11 @@ class Test:
       if timed_out[0]:
         self.fail("Timed out.")
       else:
+        total_time = time.time() - start_time
+        
+        if(total_time > 0.1):
+          self.slow.append(f"took {total_time:.1f}s")
+
         self.validate(type == "example", proc.returncode, out, err)
     finally:
       timer.cancel()
@@ -382,6 +390,13 @@ def run_script(app, path, type):
     print('')
     for failure in test.failures:
       print('      ' + pink(failure))
+    print('')
+  
+  if len(test.slow):
+    print_line(yellow("Slow") + ": " + path)
+    print('')
+    for l in test.slow:
+      print('      ' + yellow(l))
     print('')
 
 
