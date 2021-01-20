@@ -1070,6 +1070,49 @@ void wrenGrayBuffer(WrenVM* vm, ValueBuffer* buffer)
   }
 }
 
+size_t wrenObjSize(WrenVM* vm, Obj* obj) {
+  switch (obj->type)
+  {
+    case OBJ_CLASS:
+      return sizeof(ObjClass) + ((ObjClass*)obj)->methods.capacity * sizeof(Method);
+    case OBJ_CLOSURE:
+      return sizeof(ObjClosure) + sizeof(ObjUpvalue*) * ((ObjClosure*)obj)->fn->numUpvalues;
+    case OBJ_FIBER:
+      return sizeof(ObjFiber) + sizeof(CallFrame) * ((ObjFiber*)obj)->frameCapacity + sizeof(Value) * ((ObjFiber*)obj)->stackCapacity;
+    case OBJ_FN: {
+      ObjFn* fn = (ObjFn*)obj;
+      size_t size = sizeof(ObjFn);
+      size += sizeof(uint8_t) * fn->code.capacity;
+      size += sizeof(Value) * fn->constants.capacity;
+#if WREN_DISABLE_FN_DEBUG == 0
+      size += sizeof(FnDebug);
+      size += sizeof(int) * fn->debug->sourceLines.capacity;
+      size += strlen(fn->debug->name) + 1;
+#endif
+      return size;
+    }
+    case OBJ_FOREIGN:
+      return sizeof(ObjForeign);
+    case OBJ_INSTANCE:
+      return sizeof(ObjInstance) + sizeof(Value) * ((ObjInstance*)obj)->obj.classObj->numFields;
+    case OBJ_LIST:
+      return sizeof(ObjList) + sizeof(Value) * ((ObjList*)obj)->elements.capacity;
+    case OBJ_MAP:
+      return sizeof(ObjMap) + sizeof(MapEntry) * ((ObjMap*)obj)->capacity;
+    case OBJ_MODULE:
+      // Note: does not include the symbol table or values
+      return sizeof(ObjModule);
+    case OBJ_RANGE:
+      return sizeof(ObjRange);
+    case OBJ_STRING:
+      return sizeof(ObjString) + ((ObjString*)obj)->length + 1;
+    case OBJ_UPVALUE:
+      return sizeof(ObjUpvalue);
+    default:
+      return sizeof(Obj);
+  }
+}
+
 static void blackenClass(WrenVM* vm, ObjClass* classObj)
 {
   // The metaclass.
@@ -1090,8 +1133,7 @@ static void blackenClass(WrenVM* vm, ObjClass* classObj)
   wrenGrayObj(vm, (Obj*)classObj->name);
 
   // Keep track of how much memory is still in use.
-  vm->bytesAllocated += sizeof(ObjClass);
-  vm->bytesAllocated += classObj->methods.capacity * sizeof(Method);
+  vm->bytesAllocated += wrenObjSize(vm, (Obj*)classObj);
 }
 
 static void blackenClosure(WrenVM* vm, ObjClosure* closure)
@@ -1106,8 +1148,7 @@ static void blackenClosure(WrenVM* vm, ObjClosure* closure)
   }
 
   // Keep track of how much memory is still in use.
-  vm->bytesAllocated += sizeof(ObjClosure);
-  vm->bytesAllocated += sizeof(ObjUpvalue*) * closure->fn->numUpvalues;
+  vm->bytesAllocated += wrenObjSize(vm, (Obj*)closure);
 }
 
 static void blackenFiber(WrenVM* vm, ObjFiber* fiber)
@@ -1137,9 +1178,7 @@ static void blackenFiber(WrenVM* vm, ObjFiber* fiber)
   wrenGrayValue(vm, fiber->error);
 
   // Keep track of how much memory is still in use.
-  vm->bytesAllocated += sizeof(ObjFiber);
-  vm->bytesAllocated += fiber->frameCapacity * sizeof(CallFrame);
-  vm->bytesAllocated += fiber->stackCapacity * sizeof(Value);
+  vm->bytesAllocated += wrenObjSize(vm, (Obj*)fiber);
 }
 
 static void blackenFn(WrenVM* vm, ObjFn* fn)
@@ -1148,14 +1187,8 @@ static void blackenFn(WrenVM* vm, ObjFn* fn)
   wrenGrayBuffer(vm, &fn->constants);
 
   // Keep track of how much memory is still in use.
-  vm->bytesAllocated += sizeof(ObjFn);
-  vm->bytesAllocated += sizeof(uint8_t) * fn->code.capacity;
-  vm->bytesAllocated += sizeof(Value) * fn->constants.capacity;
-  
-  // The debug line number buffer.
-#if WREN_DISABLE_FN_DEBUG == 0
-  vm->bytesAllocated += sizeof(int) * fn->code.capacity;
-#endif
+  vm->bytesAllocated += wrenObjSize(vm, (Obj*)fn);
+
   // TODO: What about the function name?
 }
 
@@ -1166,6 +1199,7 @@ static void blackenForeign(WrenVM* vm, ObjForeign* foreign)
   // that much overhead. One option would be to let the foreign class register
   // a C function that returns a size for the object. That way the VM doesn't
   // always have to explicitly store it.
+  vm->bytesAllocated += wrenObjSize(vm, (Obj*)foreign);
 }
 
 static void blackenInstance(WrenVM* vm, ObjInstance* instance)
@@ -1179,8 +1213,7 @@ static void blackenInstance(WrenVM* vm, ObjInstance* instance)
   }
 
   // Keep track of how much memory is still in use.
-  vm->bytesAllocated += sizeof(ObjInstance);
-  vm->bytesAllocated += sizeof(Value) * instance->obj.classObj->numFields;
+  vm->bytesAllocated += wrenObjSize(vm, (Obj*)instance);
 }
 
 static void blackenList(WrenVM* vm, ObjList* list)
@@ -1189,8 +1222,7 @@ static void blackenList(WrenVM* vm, ObjList* list)
   wrenGrayBuffer(vm, &list->elements);
 
   // Keep track of how much memory is still in use.
-  vm->bytesAllocated += sizeof(ObjList);
-  vm->bytesAllocated += sizeof(Value) * list->elements.capacity;
+  vm->bytesAllocated += wrenObjSize(vm, (Obj*)list);
 }
 
 static void blackenMap(WrenVM* vm, ObjMap* map)
@@ -1206,8 +1238,7 @@ static void blackenMap(WrenVM* vm, ObjMap* map)
   }
 
   // Keep track of how much memory is still in use.
-  vm->bytesAllocated += sizeof(ObjMap);
-  vm->bytesAllocated += sizeof(MapEntry) * map->capacity;
+  vm->bytesAllocated += wrenObjSize(vm, (Obj*)map);
 }
 
 static void blackenModule(WrenVM* vm, ObjModule* module)
@@ -1223,19 +1254,19 @@ static void blackenModule(WrenVM* vm, ObjModule* module)
   wrenGrayObj(vm, (Obj*)module->name);
 
   // Keep track of how much memory is still in use.
-  vm->bytesAllocated += sizeof(ObjModule);
+  vm->bytesAllocated += wrenObjSize(vm, (Obj*)module);
 }
 
 static void blackenRange(WrenVM* vm, ObjRange* range)
 {
   // Keep track of how much memory is still in use.
-  vm->bytesAllocated += sizeof(ObjRange);
+  vm->bytesAllocated += wrenObjSize(vm, (Obj*)range);
 }
 
 static void blackenString(WrenVM* vm, ObjString* string)
 {
   // Keep track of how much memory is still in use.
-  vm->bytesAllocated += sizeof(ObjString) + string->length + 1;
+  vm->bytesAllocated += wrenObjSize(vm, (Obj*)string);
 }
 
 static void blackenUpvalue(WrenVM* vm, ObjUpvalue* upvalue)
@@ -1244,14 +1275,14 @@ static void blackenUpvalue(WrenVM* vm, ObjUpvalue* upvalue)
   wrenGrayValue(vm, upvalue->closed);
 
   // Keep track of how much memory is still in use.
-  vm->bytesAllocated += sizeof(ObjUpvalue);
+  vm->bytesAllocated += wrenObjSize(vm, (Obj*)upvalue);
 }
 
 static void blackenObject(WrenVM* vm, Obj* obj)
 {
 #if WREN_DEBUG_TRACE_MEMORY
   printf("mark ");
-  wrenDumpValue(OBJ_VAL(obj));
+  wrenDumpValue(vm, OBJ_VAL(obj));
   printf(" @ %p\n", obj);
 #endif
 
@@ -1286,9 +1317,9 @@ void wrenBlackenObjects(WrenVM* vm)
 void wrenFreeObj(WrenVM* vm, Obj* obj)
 {
 #if WREN_DEBUG_TRACE_MEMORY
-  printf("free ");
-  wrenDumpValue(OBJ_VAL(obj));
-  printf(" @ %p\n", obj);
+  printf("free Object @ %p\n -> ", obj);
+  wrenDumpValue(vm, OBJ_VAL(obj));
+  printf("\n");
 #endif
 
   switch (obj->type)

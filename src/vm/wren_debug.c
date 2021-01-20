@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <ctype.h>
 #ifndef NDEBUG
 #include <execinfo.h>
 #endif
@@ -51,29 +52,73 @@ void wrenDebugPrintStackTrace(WrenVM* vm)
   }
 }
 
-static void dumpObject(Obj* obj)
+static void printStringEscaped(const char* str)
+{
+  size_t i = 0;
+  putchar('"');
+  while(str[i] != '\0') {
+    char c = str[i];
+    if(c == '"') {
+      printf("\"");
+    } else if(isprint(c)) {
+      putchar(c);
+    } else {
+      printf("\\x%02x", c);
+    }
+    i++;
+  }
+  putchar('"');
+}
+
+static void dumpObject(WrenVM* vm, Obj* obj)
 {
   switch (obj->type)
   {
     case OBJ_CLASS:
-      printf("[class %s %p]", ((ObjClass*)obj)->name->value, obj);
+      printf("[class    @%p+%lu %s]", obj, wrenObjSize(vm, obj), ((ObjClass*)obj)->name->value);
       break;
-    case OBJ_CLOSURE: printf("[closure %p]", obj); break;
-    case OBJ_FIBER: printf("[fiber %p]", obj); break;
-    case OBJ_FN: printf("[fn %p]", obj); break;
-    case OBJ_FOREIGN: printf("[foreign %p]", obj); break;
-    case OBJ_INSTANCE: printf("[instance %p]", obj); break;
-    case OBJ_LIST: printf("[list %p]", obj); break;
-    case OBJ_MAP: printf("[map %p]", obj); break;
-    case OBJ_MODULE: printf("[module %p]", obj); break;
-    case OBJ_RANGE: printf("[range %p]", obj); break;
-    case OBJ_STRING: printf("%s", ((ObjString*)obj)->value); break;
-    case OBJ_UPVALUE: printf("[upvalue %p]", obj); break;
-    default: printf("[unknown object %d]", obj->type); break;
+    case OBJ_CLOSURE:
+      printf("[closure  @%p+%lu]", obj, wrenObjSize(vm, obj));
+      break;
+    case OBJ_FIBER:
+      printf("[fiber    @%p+%lu]", obj, wrenObjSize(vm, obj));
+      break;
+    case OBJ_FN:
+      printf("[fn       @%p+%lu]", obj, wrenObjSize(vm, obj));
+      break;
+    case OBJ_FOREIGN:
+      printf("[foreign  @%p+%lu]", obj, wrenObjSize(vm, obj));
+      break;
+    case OBJ_INSTANCE:
+      printf("[instance @%p+%lu]", obj, wrenObjSize(vm, obj));
+      break;
+    case OBJ_LIST:
+      printf("[list     @%p+%lu]", obj, wrenObjSize(vm, obj));
+      break;
+    case OBJ_MAP:
+      printf("[map      @%p+%lu]", obj, wrenObjSize(vm, obj));
+      break;
+    case OBJ_MODULE:
+      printf("[module   @%p+%lu]", obj, wrenObjSize(vm, obj));
+      // TODO: Include value + symbol table sizes.
+      break;
+    case OBJ_RANGE:
+      printf("[range    @%p+%lu]", obj, wrenObjSize(vm, obj));
+      break;
+    case OBJ_STRING:
+      printf("[string   @%p+%lu ", obj, wrenObjSize(vm, obj));
+      printStringEscaped(((ObjString*)obj)->value);
+      printf("]");
+      break;
+    case OBJ_UPVALUE:
+      printf("[upvalue  @%p+%lu]", obj, wrenObjSize(vm, obj));
+      break;
+    default:
+      printf("[unknown  @%p+%lu type %d?]", obj, wrenObjSize(vm, obj), obj->type); break;
   }
 }
 
-void wrenDumpValue(Value value)
+void wrenDumpValue(WrenVM* vm, Value value)
 {
 #if WREN_NAN_TAGGING
   if (IS_NUM(value))
@@ -82,7 +127,7 @@ void wrenDumpValue(Value value)
   }
   else if (IS_OBJ(value))
   {
-    dumpObject(AS_OBJ(value));
+    dumpObject(vm, AS_OBJ(value));
   }
   else
   {
@@ -143,7 +188,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     {
       int constant = READ_SHORT();
       printf("%-16s %5d '", "CONSTANT", constant);
-      wrenDumpValue(fn->constants.data[constant]);
+      wrenDumpValue(vm, fn->constants.data[constant]);
       printf("'\n");
       break;
     }
@@ -283,7 +328,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     {
       int constant = READ_SHORT();
       printf("%-16s %5d ", "CLOSURE", constant);
-      wrenDumpValue(fn->constants.data[constant]);
+      wrenDumpValue(vm, fn->constants.data[constant]);
       printf(" ");
       ObjFn* loadedFn = AS_FN(fn->constants.data[constant]);
       for (int j = 0; j < loadedFn->numUpvalues; j++)
@@ -333,7 +378,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     {
       int name = READ_SHORT();
       printf("%-16s %5d '", "IMPORT_MODULE", name);
-      wrenDumpValue(fn->constants.data[name]);
+      wrenDumpValue(vm, fn->constants.data[name]);
       printf("'\n");
       break;
     }
@@ -342,7 +387,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     {
       int variable = READ_SHORT();
       printf("%-16s %5d '", "IMPORT_VARIABLE", variable);
-      wrenDumpValue(fn->constants.data[variable]);
+      wrenDumpValue(vm, fn->constants.data[variable]);
       printf("'\n");
       break;
     }
@@ -393,12 +438,12 @@ void wrenDumpCode(WrenVM* vm, ObjFn* fn)
   printf("\n");
 }
 
-void wrenDumpStack(ObjFiber* fiber)
+void wrenDumpStack(WrenVM* vm, ObjFiber* fiber)
 {
   printf("(fiber %p) ", fiber);
   for (Value* slot = fiber->stack; slot < fiber->stackTop; slot++)
   {
-    wrenDumpValue(*slot);
+    wrenDumpValue(vm, *slot);
     printf(" | ");
   }
   printf("\n");

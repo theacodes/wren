@@ -856,7 +856,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
     #define DEBUG_TRACE_INSTRUCTIONS()                                         \
         do                                                                     \
         {                                                                      \
-          wrenDumpStack(fiber);                                                \
+          wrenDumpStack(vm, fiber);                                                \
           wrenDumpInstruction(vm, fn, (int)(ip - fn->code.data));              \
         } while (false)
   #else

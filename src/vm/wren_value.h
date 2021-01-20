@@ -790,6 +790,9 @@ void wrenGrayBuffer(WrenVM* vm, ValueBuffer* buffer);
 // (in use and fully traversed).
 void wrenBlackenObjects(WrenVM* vm);
 
+// Reports the memory usage of [obj]
+size_t wrenObjSize(WrenVM* vm, Obj* obj);
+
 // Releases all memory owned by [obj], including [obj] itself.
 void wrenFreeObj(WrenVM* vm, Obj* obj);
 

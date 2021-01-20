@@ -13,7 +13,7 @@ void wrenDebugPrintStackTrace(WrenVM* vm);
 // will not call them unless one of the various DEBUG_ flags is enabled.
 
 // Prints a representation of [value] to stdout.
-void wrenDumpValue(Value value);
+void wrenDumpValue(WrenVM* vm, Value value);
 
 // Prints a representation of the bytecode for [fn] at instruction [i].
 int wrenDumpInstruction(WrenVM* vm, ObjFn* fn, int i);
@@ -22,7 +22,7 @@ int wrenDumpInstruction(WrenVM* vm, ObjFn* fn, int i);
 void wrenDumpCode(WrenVM* vm, ObjFn* fn);
 
 // Prints the contents of the current stack for [fiber] to stdout.
-void wrenDumpStack(ObjFiber* fiber);
+void wrenDumpStack(WrenVM* vm, ObjFiber* fiber);
 
 // Prints the current C backtrace.
 void wrenPrintCBacktrace(size_t depth);
